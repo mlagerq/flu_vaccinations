@@ -1,0 +1,70 @@
+---
+title: "Final Project: Vaccination Rates"
+subtitle: "EDA Memo"
+author: "Megan Lagerquist & Joe DeMattia"
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(dplyr)
+
+# load most recent County Health Rankings data
+chr2025_raw <- read.csv("analytic_data2025.csv") # data from 2022
+sup2026_raw <- read.csv("analytic_supplement_20260325.csv") # data from 2023
+
+chr2025 <- chr2025_raw |>
+  select(
+    fips = County.FIPS.Code,
+    name = Name, 
+    state = State.Abbreviation,
+    state_fips = State.FIPS.Code,
+    release_year = Release.Year,
+    flu_vac = Flu.Vaccinations.raw.value,
+    pcp_ratio = Ratio.of.population.to.primary.care.physicians.,
+    rural = X..Rural.raw.value,
+    income = Median.Household.Income.raw.value,
+    uninsured_adults = Uninsured.Adults.raw.value,
+    uninsured_children = Uninsured.Children.raw.value,
+    hs_grad = High.School.Graduation.raw.value
+  ) |>
+  filter(fips != 0) |>
+  mutate(fips = as.numeric(fips)) |>
+  as_tibble()
+
+# gather more recent variables when they exist (mapping done per codebook)
+sup2026 <- sup2026_raw |>
+  select(
+    fips = countycode,
+    name = county, 
+    state,
+    state_fips = statecode,
+    flu_vac = v155_rawvalue,
+    pcp_ratio = v004_rawalternatevalue,
+    uninsured_adults = v003_rawvalue,
+    uninsured_children = v122_rawvalue
+  ) |>
+  mutate(release_year = "2026") |>
+  filter(fips != 0) |>
+  as_tibble()
+
+```
+
+# Outcome variable: vaccination rate
+
+The vaccination rate at the county level will be pulled from the supplemental data where possible.
+
+```{r}
+#| eval: true
+head(chr2025)
+head(sup2026)
+hist(chr2025$flu_vac)
+hist(sup2026$flu_vac)
+
+chr2025 |> filter(is.na(flu_vac))
+sup2026 |> filter(is.na(flu_vac))
+
+```
