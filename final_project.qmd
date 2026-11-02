@@ -68,3 +68,15 @@ chr2025 |> filter(is.na(flu_vac))
 sup2026 |> filter(is.na(flu_vac))
 
 ```
+# Predictor: PCP Ratio
+```{r}
+```
+
+# Documentation
+```{r}
+library(countyhealthR)
+list_chrr_measures(release_year = '2025')
+get_chrr_measure_metadata("Uninsured Adults", '2025')
+#get_chrr_measure_data(geography = "county", measure="Uninsured Adults", release_year = '2025')
+#get_chrr_county_data(state="NY", release_year = "2025")
+```
