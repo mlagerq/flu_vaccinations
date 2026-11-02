@@ -126,6 +126,23 @@ nrow(full_data |> filter(is.na(coalesce(pcp_raw.23, pcp_raw.22)))) # 146 NAs
 
 ```
 
+# Household Median Income
+```{r}
+hist(chr2025$income) # Right Skew
+
+combine <- chr2025 |> #Combine using both county and state, cant just do county because some states have same county name
+  left_join(sup2026, by = c("name", "state"))
+
+
+ggplot(combine, aes(x = income, y = flu_vac.y)) + 
+  geom_point() + labs (
+    title = "County 2022 Income vs 2023 Flu Vaccination",
+    x = "County Income",
+    y = "Flue Vaccination rate"
+  )
+
+```
+
 # Documentation
 ```{r}
 library(countyhealthR)
