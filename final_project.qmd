@@ -128,15 +128,53 @@ nrow(full_data |> filter(is.na(coalesce(pcp_raw.23, pcp_raw.22)))) # 146 NAs
 
 # Household Median Income
 ```{r}
-hist(chr2025$income) # Right Skew
+hist(final_data$income) # Right Skew
 ggplot(final_data, aes(x = income, y = flu_vac)) + 
   geom_point() + labs (
     title = "County 2022 Income vs 2023 Flu Vaccination",
     x = "County Income",
-    y = "Flue Vaccination rate"
+    y = "Flu Vaccination rate"
   )
 #Missingness 
-summary(chr2025$income) # 8 NAs 
+summary(final_data$income) # 8 NAs 
+
+```
+#Education 
+```{r}
+#Missingness
+summary(final_data$hs_grad) # 525 NAs
+
+
+hist(final_data$hs_grad) # Left Skew
+ggplot(final_data, aes(x = hs_grad, y = flu_vac)) + 
+  geom_point() + labs (
+    title = " 2022 High School Graduation Rate vs 2023 Flu Vaccination",
+    x = "Graduation Rate",
+    y = "Flu Vaccination rate") 
+```
+# Uninsured Percentage
+```{r}
+# Missingness
+summary(final_data$uninsured_children.23) # 8 NAs
+summary(final_data$uninsured_adults.23) # 8 NAs
+summary(final_data$uninsured_children.22) # 8 NAs
+summary(final_data$uninsured_adults.22) #8 Nas
+#Since equal amount of missing values will use most recent from 2023
+
+hist(final_data$uninsured_adults.23) 
+hist(final_data$uninsured_children.23, xlim = c(0, .3)) 
+#Both Right skewed
+
+ggplot(final_data, aes(x = uninsured_children.23, y = flu_vac)) + 
+  geom_point() + labs (
+    title = "2023 Uninsured Children Rate vs  Flu Vaccination",
+    x = "Uninsured Children Rate",
+    y = "Flu Vaccination rate") 
+ggplot(final_data, aes(x = uninsured_adults.23, y = flu_vac)) + 
+  geom_point() + labs (
+    title = "2023 Uninsured Adult Rate vs Flu Vaccination",
+    x = "Uninsured Adult Rate",
+    y = "Flu Vaccination rate") 
 
 ```
 
