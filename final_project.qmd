@@ -7,7 +7,7 @@ execute:
   message: false
 ---
 
-```{r}
+```{r, echo=FALSE}
 #| label: setup
 library(tidyverse)
 library(dplyr)
@@ -25,6 +25,7 @@ chr2025 <- chr2025_raw |>
     release_year = Release.Year,
     flu_vac = Flu.Vaccinations.raw.value,
     pcp_ratio = Ratio.of.population.to.primary.care.physicians.,
+    pcp_raw = Primary.Care.Physicians.raw.value,
     rural = X..Rural.raw.value,
     income = Median.Household.Income.raw.value,
     uninsured_adults = Uninsured.Adults.raw.value,
@@ -44,6 +45,7 @@ sup2026 <- sup2026_raw |>
     state_fips = statecode,
     flu_vac = v155_rawvalue,
     pcp_ratio = v004_rawalternatevalue,
+    pcp_raw = v004_rawvalue,
     uninsured_adults = v003_rawvalue,
     uninsured_children = v122_rawvalue
   ) |>
@@ -51,32 +53,84 @@ sup2026 <- sup2026_raw |>
   filter(fips != 0) |>
   as_tibble()
 
+head(chr2025)
+head(sup2026)
 ```
+We have observations for n=3152 counties.
 
 # Outcome variable: vaccination rate
 
-The vaccination rate at the county level will be pulled from the supplemental data where possible.
+Ideally, we want to use the vaccination rate at the county level from the supplemental data for 2023, released in 2026, as it is the most recent. First we will compare the vaccination rates from 2022 and 2023.
 
 ```{r}
 #| eval: true
-head(chr2025)
-head(sup2026)
+summary(chr2025$flu_vac)
+summary(sup2026$flu_vac)
+
 hist(chr2025$flu_vac)
 hist(sup2026$flu_vac)
+```
 
-chr2025 |> filter(is.na(flu_vac))
-sup2026 |> filter(is.na(flu_vac))
+The vaccination rate is higher in 2022. The distribution for 2023 is fairly symmetric where as the distribution for 2022 is a bit more left skewed. 
+
+Next, we will compare missingness.
+```{r}
+sum(is.na(chr2025$flu_vac))
+sum(is.na(sup2026$flu_vac))
+round(sum(is.na(sup2026$flu_vac))/nrow(sup2026), 4)
+```
+
+Just under 1% of the data is missing for flu_vac overall in the 2026 data and only a few more counties for 2026 compared, so it is acceptable to use the outcome from the 2026 supplemental data.
+
+```{r}
+# Join to create one data set, excluding counties with no data for 2023 flu vaccination rate.
+full_data <- 
+  left_join(sup2026, chr2025, 
+            by=c("fips", "state_fips", "name", "state"), suffix = c(".23",".22")) |> 
+  #select(-ends_with(".y")) |> # Remove 2025 columns when we have 2026 data
+  #rename_with(~gsub("\\.x$", "", .)) |> # Remove .x suffix from 2026 columns
+  filter(!is.na(flu_vac.23)) |> # Exclude counties with no data for 2023 flu vaccination rate.
+  select(-flu_vac.22, flu_vac = flu_vac.23)
+
+chr2025 <- chr2025 |> filter(!is.na(flu_vac))
+sup2026 <- sup2026 |> filter(!is.na(flu_vac))
+
+head(full_data)
 
 ```
+
 # Predictor: PCP Ratio
 ```{r}
+# Missingness
+summary(chr2025$pcp_ratio) # 154 NAs
+summary(sup2026$pcp_ratio) # 243 NAs
+nrow(full_data |> filter(is.na(coalesce(pcp_ratio.23, pcp_ratio.22)))) # 147 NAs
+
+# Conclusion: 2025 is more complete and there are only 7 extra counties we drop by using 2025 only, this is acceptable
+
+final_data <- full_data |> filter(!is.na(pcp_ratio.22)) |>
+  select(-pcp_ratio.23, pcp_ratio = pcp_ratio.22)
+
+summary(final_data$pcp_ratio)
+hist(final_data$pcp_ratio) # right skewed, also we have a negative
+
+# Alternatively, we can use the rate of providers/population.
+summary(final_data$pcp_raw.22*100)
+hist(final_data$pcp_raw.22*100)
+
+final_data |> filter(pcp_ratio < 0)
+
+summary(chr2025$pcp_raw) # 154 NAs
+summary(sup2026$pcp_raw) # 174 NAs
+nrow(full_data |> filter(is.na(coalesce(pcp_raw.23, pcp_raw.22)))) # 146 NAs
+
 ```
 
 # Documentation
 ```{r}
 library(countyhealthR)
 list_chrr_measures(release_year = '2025')
-get_chrr_measure_metadata("Uninsured Adults", '2025')
+get_chrr_measure_metadata("Primary Care Physicians", '2025')
 #get_chrr_measure_data(geography = "county", measure="Uninsured Adults", release_year = '2025')
 #get_chrr_county_data(state="NY", release_year = "2025")
 ```
