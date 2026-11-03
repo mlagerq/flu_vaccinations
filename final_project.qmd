@@ -98,34 +98,36 @@ full_data <-
 chr2025 <- chr2025 |> filter(!is.na(flu_vac))
 sup2026 <- sup2026 |> filter(!is.na(flu_vac))
 
-head(full_data)
-
+final_data <- full_data
 ```
 
 # PCP Ratio
 ```{r}
 # Missingness
-summary(chr2025$pcp_ratio) # 154 NAs
-summary(sup2026$pcp_ratio) # 243 NAs
-nrow(full_data |> filter(is.na(coalesce(pcp_ratio.23, pcp_ratio.22)))) # 147 NAs
+#summary(chr2025$pcp_ratio) # 154 NAs
+#summary(sup2026$pcp_ratio) # 243 NAs
+#nrow(full_data |> filter(is.na(coalesce(pcp_ratio.23, pcp_ratio.22)))) # 147 NAs
 
 # Conclusion: 2025 is more complete and there are only 7 extra counties we drop by using 2025 only, this is acceptable
 
-final_data <- full_data |> filter(!is.na(pcp_ratio.22)) |>
+#hist(final_data$pcp_ratio.22) # right skewed
+# When there are 0 providers in a county, pcp = -population 
+#nrow(final_data |> filter(pcp_ratio.22 < 0)) # 68 rows < 0
+
+final_data <- full_data |> filter(!is.na(pcp_ratio.22) & pcp_ratio.22 >= 0) |>
   select(-pcp_ratio.23, pcp_ratio = pcp_ratio.22)
 
-summary(final_data$pcp_ratio)
-hist(final_data$pcp_ratio) # right skewed, also we have a negative
-# When there are 0 providers in a county, pcp = -population 
-final_data |> filter(pcp_ratio < 0)
+summary(final_data$pcp_ratio) # median pcp ratio is 2100 patients per provider
+hist(final_data$pcp_ratio) # right-skewed
+hist(log(final_data$pcp_ratio))
+ggplot(final_data, aes(pcp_ratio, flu_vac)) +
+  geom_point(alpha = .5) + 
+  labs (
+    title = "2023 Flu Vaccination Rate vs 2022 PCP Ratio",
+    x = "Population/Primary Care Physicians",
+    y = "Flu Vaccination rate") +
+  geom_smooth(method=lm)
 
-# Alternatively, we can use the rate of providers/population.
-summary(final_data$pcp_raw.22*100)
-hist(final_data$pcp_raw.22*100)
-
-summary(chr2025$pcp_raw) # 154 NAs
-summary(sup2026$pcp_raw) # 174 NAs
-nrow(full_data |> filter(is.na(coalesce(pcp_raw.23, pcp_raw.22)))) # 146 NAs
 ```
 
 # % Rural
@@ -139,21 +141,18 @@ final_data <- final_data |> filter(!is.na(rural))
 hist(final_data$rural) # left-skewed with many counties 100% rural
 
 ggplot(final_data, aes(x = jitter(rural, amount = .02), y = flu_vac)) +
-  geom_point() + 
-  geom_smooth(method = lm) +
-  labs (
+  geom_point() + labs (
     title = "County 2022 Rural % vs 2023 Flu Vaccination Rate",
     x = "Rural %",
     y = "Flu Vaccination rate"
   )
 ```
+
 # Household Median Income
 ```{r}
 hist(final_data$income) # Right Skew
 ggplot(final_data, aes(x = income, y = flu_vac)) + 
-  geom_point(alpha = .5) + 
-  geom_smooth(method = loess) +
-  labs (
+  geom_point() + labs (
     title = "County 2022 Income vs 2023 Flu Vaccination",
     x = "County Income",
     y = "Flu Vaccination rate"
@@ -162,24 +161,29 @@ ggplot(final_data, aes(x = income, y = flu_vac)) +
 summary(final_data$income) # 8 NAs 
 
 ```
-#Education 
+
+# Education 
 ```{r}
 #Missingness
 summary(final_data$hs_comp)
 summary(final_data$some_college)
 
 hist(final_data$hs_comp) # Left Skew
-hist(final_data$some_college)
-
-final_data |> 
-  pivot_longer(c(hs_comp,some_college) ,names_to = "education", values_to = "rate") |> 
-  ggplot(aes(x = rate, y = flu_vac)) +
-  geom_point() + 
-  geom_smooth(method = lm) +
-  facet_wrap(~education)
-
+ggplot(final_data, aes(x = hs_comp, y = flu_vac)) + 
+  geom_point() + labs (
+    title = " 2022 High School Graduation Rate vs 2023 Flu Vaccination",
+    x = "Graduation Rate",
+    y = "Flu Vaccination rate") 
+ggplot(final_data, aes(x = some_college, y = flu_vac)) + 
+  geom_point() + labs (
+    title = " 2022 Some College Expierence vs 2023 Flu Vaccination",
+    x = "Some College Rate",
+    y = "Flu Vaccination rate") 
+ggplot(final_data, aes(x = hs_comp, y = some_college)) + 
+  geom_point()
 cor(final_data$hs_comp, final_data$some_college)
 ```
+
 # Uninsured Percentage
 ```{r}
 # Missingness
@@ -193,26 +197,26 @@ hist(final_data$uninsured_adults.23)
 hist(final_data$uninsured_children.23, xlim = c(0, .3)) 
 #Both Right skewed
 
-
-
-final_data |> 
-  pivot_longer(c(uninsured_children.23, uninsured_adults.23) ,names_to = "uninsured", values_to = "rate") |> 
-  ggplot(aes(x = rate, y = flu_vac)) +
-  geom_point() + 
-  geom_smooth(method = lm) +
-  facet_wrap(~uninsured)
-
+ggplot(final_data, aes(x = uninsured_children.23, y = flu_vac)) + 
+  geom_point() + labs (
+    title = "2023 Uninsured Children Rate vs  Flu Vaccination",
+    x = "Uninsured Children Rate",
+    y = "Flu Vaccination rate") 
+ggplot(final_data, aes(x = uninsured_adults.23, y = flu_vac)) + 
+  geom_point() + labs (
+    title = "2023 Uninsured Adult Rate vs Flu Vaccination",
+    x = "Uninsured Adult Rate",
+    y = "Flu Vaccination rate") 
 
 ```
-#Non-Proficient In English
+
+# Non-Proficient In English
 ```{r}
 summary(final_data$Non_Proficient_English) # 8 NAs
 hist(final_data$Non_Proficient_English)  # Right Skew
 
 ggplot(final_data, aes(x = Non_Proficient_English, y = flu_vac)) + 
-  geom_point(alpha = .5) + 
-  geom_smooth(method = lm) +
-  labs (
+  geom_point() + labs (
     title = "2022 Non-Proficiency English vs  2023 Flu Vaccination",
     x = "Non-Proficiency English Rate",
     y = "Flu Vaccination rate") 
