@@ -139,7 +139,9 @@ final_data <- final_data |> filter(!is.na(rural))
 hist(final_data$rural) # left-skewed with many counties 100% rural
 
 ggplot(final_data, aes(x = jitter(rural, amount = .02), y = flu_vac)) +
-  geom_point() + labs (
+  geom_point() + 
+  geom_smooth(method = lm) +
+  labs (
     title = "County 2022 Rural % vs 2023 Flu Vaccination Rate",
     x = "Rural %",
     y = "Flu Vaccination rate"
@@ -149,7 +151,9 @@ ggplot(final_data, aes(x = jitter(rural, amount = .02), y = flu_vac)) +
 ```{r}
 hist(final_data$income) # Right Skew
 ggplot(final_data, aes(x = income, y = flu_vac)) + 
-  geom_point() + labs (
+  geom_point(alpha = .5) + 
+  geom_smooth(method = loess) +
+  labs (
     title = "County 2022 Income vs 2023 Flu Vaccination",
     x = "County Income",
     y = "Flu Vaccination rate"
@@ -165,18 +169,15 @@ summary(final_data$hs_comp)
 summary(final_data$some_college)
 
 hist(final_data$hs_comp) # Left Skew
-ggplot(final_data, aes(x = hs_comp, y = flu_vac)) + 
-  geom_point() + labs (
-    title = " 2022 High School Graduation Rate vs 2023 Flu Vaccination",
-    x = "Graduation Rate",
-    y = "Flu Vaccination rate") 
-ggplot(final_data, aes(x = some_college, y = flu_vac)) + 
-  geom_point() + labs (
-    title = " 2022 Some College Expierence vs 2023 Flu Vaccination",
-    x = "Some College Rate",
-    y = "Flu Vaccination rate") 
-ggplot(final_data, aes(x = hs_comp, y = some_college)) + 
-  geom_point()
+hist(final_data$some_college)
+
+final_data |> 
+  pivot_longer(c(hs_comp,some_college) ,names_to = "education", values_to = "rate") |> 
+  ggplot(aes(x = rate, y = flu_vac)) +
+  geom_point() + 
+  geom_smooth(method = lm) +
+  facet_wrap(~education)
+
 cor(final_data$hs_comp, final_data$some_college)
 ```
 # Uninsured Percentage
@@ -192,16 +193,15 @@ hist(final_data$uninsured_adults.23)
 hist(final_data$uninsured_children.23, xlim = c(0, .3)) 
 #Both Right skewed
 
-ggplot(final_data, aes(x = uninsured_children.23, y = flu_vac)) + 
-  geom_point() + labs (
-    title = "2023 Uninsured Children Rate vs  Flu Vaccination",
-    x = "Uninsured Children Rate",
-    y = "Flu Vaccination rate") 
-ggplot(final_data, aes(x = uninsured_adults.23, y = flu_vac)) + 
-  geom_point() + labs (
-    title = "2023 Uninsured Adult Rate vs Flu Vaccination",
-    x = "Uninsured Adult Rate",
-    y = "Flu Vaccination rate") 
+
+
+final_data |> 
+  pivot_longer(c(uninsured_children.23, uninsured_adults.23) ,names_to = "uninsured", values_to = "rate") |> 
+  ggplot(aes(x = rate, y = flu_vac)) +
+  geom_point() + 
+  geom_smooth(method = lm) +
+  facet_wrap(~uninsured)
+
 
 ```
 #Non-Proficient In English
@@ -210,13 +210,19 @@ summary(final_data$Non_Proficient_English) # 8 NAs
 hist(final_data$Non_Proficient_English)  # Right Skew
 
 ggplot(final_data, aes(x = Non_Proficient_English, y = flu_vac)) + 
-  geom_point() + labs (
+  geom_point(alpha = .5) + 
+  geom_smooth(method = lm) +
+  labs (
     title = "2022 Non-Proficiency English vs  2023 Flu Vaccination",
     x = "Non-Proficiency English Rate",
     y = "Flu Vaccination rate") 
 
 
 ```
+Modeling Plan: 
+Income, uninsured rates and education exploratory plots showed possible relationship with flu vaccination rates. Non-Proficiency in English rate we did not see a relationship. For education and uninsured rates we need to be careful within both of them for colinearty so we may decide to only look at variable within both of them (for example just looking at uninsured adults and some_college). 
+
+
 # Documentation
 ```{r}
 library(countyhealthR)
