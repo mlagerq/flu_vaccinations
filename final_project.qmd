@@ -27,7 +27,7 @@ chr2022 <- chr2022_raw |>
     release_year = Release.Year,
     flu_vac = Flu.Vaccinations.raw.value,
     pcp_ratio = Ratio.of.population.to.primary.care.physicians.,
-    pcp_raw = Primary.Care.Physicians.raw.value,
+    #pcp_raw = Primary.Care.Physicians.raw.value,
     rural = X..Rural.raw.value,
     income = Median.Household.Income.raw.value,
     uninsured_adults = Uninsured.Adults.raw.value,
@@ -49,7 +49,7 @@ sup2023 <- sup2023_raw |>
     state_fips = statecode,
     flu_vac = v155_rawvalue,
     pcp_ratio = v004_rawalternatevalue,
-    pcp_raw = v004_rawvalue,
+    #pcp_raw = v004_rawvalue,
     uninsured_adults = v003_rawvalue,
     uninsured_children = v122_rawvalue
   ) |>
@@ -131,28 +131,6 @@ h_rural + p_rural
 ```
 The data is somewhat uniform under 100% rural but many counties are 100% rural. However, the linear relationship appears appropriate. There are only 8 counties with NA values, which we will drop.
 
-## Median Household Income
-The income where half of households in a county earn more and half of households earn less.
-```{r}
-summary(final_data$income) # 8 NA
-```
-
-```{r echo=FALSE}
-final_data <- final_data |> filter(!is.na(income))
-h_income <- ggplot(final_data, aes(x = income)) +
-  geom_histogram()+ 
-  labs(title = "Median Household Income")
-p_income <- ggplot(final_data, aes(x = income, y = flu_vac)) + 
-  geom_point(alpha = .5) + 
-  geom_smooth(method = loess) +
-  labs (
-    title = "Flu Vac. Rate vs Median Income",
-    x = "Median Household Income",
-    y = "Flu Vaccination rate"
-  )
-h_income + p_income
-```
-
 ## PCP Ratio 
 Ratio of population to primary care physicians.
 ```{r eval=FALSE}
@@ -171,7 +149,7 @@ nrow(final_data |> filter(pcp_ratio.22 < 0)) # 68 rows < 0
 
 We will remove observations where the pcp_ratio is negative.
 ```{r}
-final_data <- full_data |> filter(!is.na(pcp_ratio.22) & pcp_ratio.22 >= 0) |>
+final_data <- final_data |> filter((!is.na(pcp_ratio.22)) & pcp_ratio.22 >= 0) |>
   select(-pcp_ratio.23, pcp_ratio = pcp_ratio.22)
 ```
 
@@ -192,6 +170,28 @@ p_pcp <- ggplot(final_data, aes(pcp_ratio, flu_vac)) +
   geom_smooth(method=lm)
 
 h_pcp + p_pcp
+```
+
+## Median Household Income
+The income where half of households in a county earn more and half of households earn less.
+```{r}
+summary(final_data$income)
+```
+
+```{r echo=FALSE}
+final_data <- final_data |> filter(!is.na(income))
+h_income <- ggplot(final_data, aes(x = income)) +
+  geom_histogram()+ 
+  labs(title = "Median Household Income")
+p_income <- ggplot(final_data, aes(x = income, y = flu_vac)) + 
+  geom_point(alpha = .5) + 
+  geom_smooth(method = loess) +
+  labs (
+    title = "Flu Vac. Rate vs Median Income",
+    x = "Median Household Income",
+    y = "Flu Vaccination rate"
+  )
+h_income + p_income
 ```
 
 ## Education
@@ -228,7 +228,7 @@ summary(final_data$uninsured_children.22)
 summary(final_data$uninsured_adults.22) 
 
 # Since equal amount of missing values, we will use most recent from 2023
-final_data <- full_data |>
+final_data <- final_data |>
   select(-uninsured_adults.22, uninsured_adults = uninsured_adults.23) |>
   select(-uninsured_children.22, uninsured_children = uninsured_children.23)
 ```
@@ -247,7 +247,7 @@ final_data |>
   facet_wrap(~uninsured)
 ```
 
-# % Non-Proficient In English
+## % Non-Proficient In English
 Percentage of population aged 5 and over who reported speaking English less than well.
 
 Only available in the 2025 release (for 2022).
@@ -272,17 +272,20 @@ h_eng + p_eng
 # Final data
 ```{r}
 anyNA(final_data)
+nrow(final_data)
 ```
 
 # Modeling Plan: 
-The missingness levels in our planned variables is tolerable so we will keep the predictors explored above.
+The missingness levels in our planned variables is tolerable so we will keep the predictors explored above. We have n=2892 observations after removing NAs.
 
-However, for education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category.
+Flu vaccination rate and uninsured rate will come from 2023; all other variables will come from 2022. 
+
+For education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category.
 
 Income, uninsured rates and education exploratory plots showed possible relationship with flu vaccination rates. Non-Proficiency in English rate we did not see an obvious relationship.
 
 # Documentation
-```{r}
+```{r eval = FALSE}
 library(countyhealthR)
 list_chrr_measures(release_year = '2025')
 get_chrr_measure_metadata("% Not Proficient in English", '2025')

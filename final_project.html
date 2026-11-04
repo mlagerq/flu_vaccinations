@@ -188,17 +188,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>The data is somewhat uniform under 100% rural but many counties are 100% rural. However, the linear relationship appears appropriate. There are only 8 counties with NA values, which we will drop.</p>
 </section>
-<section id="median-household-income" class="level2">
-<h2 class="anchored" data-anchor-id="median-household-income">Median Household Income</h2>
-<p>The income where half of households in a county earn more and half of households earn less.</p>
+<section id="pcp-ratio" class="level2">
+<h2 class="anchored" data-anchor-id="pcp-ratio">PCP Ratio</h2>
+<p>Ratio of population to primary care physicians.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>income) <span class="co"># 8 NA</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  28579   54553   62696   65416   72892  173655 </code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Missingness</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(chr2022<span class="sc">$</span>pcp_ratio) <span class="co"># 154 NAs</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sup2023<span class="sc">$</span>pcp_ratio) <span class="co"># 243 NAs</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(full_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="fu">is.na</span>(<span class="fu">coalesce</span>(pcp_ratio<span class="fl">.23</span>, pcp_ratio<span class="fl">.22</span>)))) <span class="co"># 147 NAs</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</div>
+<p>The data on PCPs for 2022 is more complete than 2023 and there are only 7 extra counties we drop by using 2022 only; this is acceptable.</p>
+<p>However, since the denominator is number of PCPs in the county, for counties where there are no PCPs, negative county population is reported instead.</p>
 <div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(final_data<span class="sc">$</span>pcp_ratio<span class="fl">.22</span>) <span class="co"># right skewed</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -206,21 +208,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(final_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(pcp_ratio<span class="fl">.22</span> <span class="sc">&lt;</span> <span class="dv">0</span>)) <span class="co"># 68 rows &lt; 0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 68</code></pre>
 </div>
-</section>
-<section id="pcp-ratio" class="level2">
-<h2 class="anchored" data-anchor-id="pcp-ratio">PCP Ratio</h2>
-<p>Ratio of population to primary care physicians.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Missingness</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(chr2022<span class="sc">$</span>pcp_ratio) <span class="co"># 154 NAs</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sup2023<span class="sc">$</span>pcp_ratio) <span class="co"># 243 NAs</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(full_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="fu">is.na</span>(<span class="fu">coalesce</span>(pcp_ratio<span class="fl">.23</span>, pcp_ratio<span class="fl">.22</span>)))) <span class="co"># 147 NAs</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The data on PCPs for 2022 is more complete than 2023 and there are only 7 extra counties we drop by using 2022 only; this is acceptable.</p>
-<p>However, since the denominator is number of PCPs in the county, for counties where there are no PCPs, negative county population is reported instead.</p>
+<p>We will remove observations where the pcp_ratio is negative.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(final_data<span class="sc">$</span>pcp_ratio<span class="fl">.22</span>) <span class="co"># right skewed</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>final_data <span class="ot">&lt;-</span> final_data <span class="sc">|&gt;</span> <span class="fu">filter</span>((<span class="sc">!</span><span class="fu">is.na</span>(pcp_ratio<span class="fl">.22</span>)) <span class="sc">&amp;</span> pcp_ratio<span class="fl">.22</span> <span class="sc">&gt;=</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>pcp_ratio<span class="fl">.23</span>, <span class="at">pcp_ratio =</span> pcp_ratio<span class="fl">.22</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Evaluating the remaining distribution, we see that the data is very right-skewed (median = 2100 patients per PCP, mean = 2813 patients per PCP) and the linear model does not seem to fit the graph well. We will likely need to try a log transformation of pcp_ratio in the final model.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  172.3  1402.6  2102.5  2816.9  3265.2 29081.0 </code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -228,22 +231,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(final_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(pcp_ratio<span class="fl">.22</span> <span class="sc">&lt;</span> <span class="dv">0</span>)) <span class="co"># 68 rows &lt; 0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 68</code></pre>
 </div>
-</div>
-<p>We will remove observations where the pcp_ratio is negative.</p>
+</section>
+<section id="median-household-income" class="level2">
+<h2 class="anchored" data-anchor-id="median-household-income">Median Household Income</h2>
+<p>The income where half of households in a county earn more and half of households earn less.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>final_data <span class="ot">&lt;-</span> full_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(pcp_ratio<span class="fl">.22</span>) <span class="sc">&amp;</span> pcp_ratio<span class="fl">.22</span> <span class="sc">&gt;=</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>pcp_ratio<span class="fl">.23</span>, <span class="at">pcp_ratio =</span> pcp_ratio<span class="fl">.22</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>Evaluating the remaining distribution, we see that the data is very right-skewed (median = 2100 patients per PCP, mean = 2813 patients per PCP) and the linear model does not seem to fit the graph well. We will likely need to try a log transformation of pcp_ratio in the final model.</p>
-<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>income)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  172.3  1400.2  2099.7  2813.4  3260.5 29081.0 </code></pre>
+  28579   54760   63160   65885   73195  173655 </code></pre>
 </div>
+</div>
+<div class="cell">
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -261,13 +261,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Missingness</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>hs_comp)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
- 0.5706  0.8570  0.8991  0.8881  0.9273  0.9836       8 </code></pre>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.5706  0.8570  0.8991  0.8881  0.9273  0.9836 </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>some_college)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
- 0.2207  0.5162  0.5911  0.5922  0.6726  0.9321       8 </code></pre>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.2207  0.5162  0.5911  0.5922  0.6726  0.9321 </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(final_data<span class="sc">$</span>hs_comp) <span class="co"># Left Skew</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
@@ -300,7 +300,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(final_data<span class="sc">$</span>hs_comp, final_data<span class="sc">$</span>some_college)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] NA</code></pre>
+<pre><code>[1] 0.7235538</code></pre>
 </div>
 </div>
 </section>
@@ -311,26 +311,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Missingness</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>uninsured_children<span class="fl">.23</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
-0.01076 0.03933 0.05397 0.06084 0.07264 0.38985       8 </code></pre>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.01076 0.03933 0.05397 0.06084 0.07264 0.38985 </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>uninsured_adults<span class="fl">.23</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
-0.02480 0.07688 0.10608 0.11738 0.14757 0.38584       8 </code></pre>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.02480 0.07688 0.10608 0.11738 0.14757 0.38584 </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>uninsured_children<span class="fl">.22</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
-0.01188 0.03830 0.05075 0.05750 0.06822 0.41223       8 </code></pre>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.01188 0.03830 0.05075 0.05750 0.06822 0.41223 </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>uninsured_adults<span class="fl">.22</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
-0.02481 0.07879 0.10992 0.12195 0.15528 0.40732       8 </code></pre>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.02481 0.07879 0.10992 0.12195 0.15528 0.40732 </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Since equal amount of missing values, we will use most recent from 2023</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>final_data <span class="ot">&lt;-</span> full_data <span class="sc">|&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>final_data <span class="ot">&lt;-</span> final_data <span class="sc">|&gt;</span></span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>uninsured_adults<span class="fl">.22</span>, <span class="at">uninsured_adults =</span> uninsured_adults<span class="fl">.23</span>) <span class="sc">|&gt;</span></span>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>uninsured_children<span class="fl">.22</span>, <span class="at">uninsured_children =</span> uninsured_children<span class="fl">.23</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -359,16 +359,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-</section>
-<section id="non-proficient-in-english" class="level1">
-<h1>% Non-Proficient In English</h1>
+<section id="non-proficient-in-english" class="level2">
+<h2 class="anchored" data-anchor-id="non-proficient-in-english">% Non-Proficient In English</h2>
 <p>Percentage of population aged 5 and over who reported speaking English less than well.</p>
 <p>Only available in the 2025 release (for 2022).</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_data<span class="sc">$</span>Non_Proficient_English)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.      NAs 
-0.000000 0.002558 0.007166 0.015893 0.017869 0.244816        8 </code></pre>
+<pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+0.000000 0.002776 0.007380 0.015913 0.018058 0.231315 </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -381,52 +380,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
+</section>
 <section id="final-data" class="level1">
 <h1>Final data</h1>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anyNA</span>(final_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] TRUE</code></pre>
+<pre><code>[1] FALSE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(final_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2892</code></pre>
 </div>
 </div>
 </section>
 <section id="modeling-plan" class="level1">
 <h1>Modeling Plan:</h1>
-<p>The missingness levels in our planned variables is tolerable so we will keep the predictors explored above.</p>
-<p>However, for education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category.</p>
+<p>The missingness levels in our planned variables is tolerable so we will keep the predictors explored above. We have n=2892 observations after removing NAs.</p>
+<p>Flu vaccination rate and uninsured rate will come from 2023; all other variables will come from 2022.</p>
+<p>For education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category.</p>
 <p>Income, uninsured rates and education exploratory plots showed possible relationship with flu vaccination rates. Non-Proficiency in English rate we did not see an obvious relationship.</p>
 </section>
 <section id="documentation" class="level1">
 <h1>Documentation</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(countyhealthR)</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">list_chrr_measures</span>(<span class="at">release_year =</span> <span class="st">'2025'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 95 × 3
-   measure_id measure_name               description                            
-        &lt;dbl&gt; &lt;chr&gt;                      &lt;chr&gt;                                  
- 1          1 Premature Death            Years of potential life lost before ag…
- 2          2 Poor or Fair Health        Percentage of adults reporting fair or…
- 3          3 Uninsured Adults           Percentage of adults under age 65 with…
- 4          4 Primary Care Physicians    Ratio of population to primary care ph…
- 5          5 Preventable Hospital Stays Rate of hospital stays for ambulatory-…
- 6          9 Adult Smoking              Percentage of adults who are current s…
- 7         11 Adult Obesity              Percentage of the adult population (ag…
- 8         14 Teen Births                Number of births per 1,000 female popu…
- 9         15 Homicides                  Number of deaths due to homicide per 1…
-10         21 High School Graduation     Percentage of ninth-grade cohort that …
-# ℹ 85 more rows</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_chrr_measure_metadata</span>(<span class="st">"% Not Proficient in English"</span>, <span class="st">'2025'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 13
-   year measure_id measure_name        description years_used compare_years_text
-  &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;               &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;             
-1  2025         59 % Not Proficient i… Percentage… 2019-2023  Use caution when …
-# ℹ 7 more variables: compare_states_text &lt;chr&gt;, factor_name &lt;chr&gt;,
-#   focus_area_name &lt;chr&gt;, category_name &lt;chr&gt;, direction &lt;dbl&gt;,
-#   display_precision &lt;dbl&gt;, format_type &lt;dbl&gt;</code></pre>
-</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(countyhealthR)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">list_chrr_measures</span>(<span class="at">release_year =</span> <span class="st">'2025'</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="fu">get_chrr_measure_metadata</span>(<span class="st">"% Not Proficient in English"</span>, <span class="st">'2025'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 
