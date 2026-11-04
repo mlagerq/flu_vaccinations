@@ -193,6 +193,7 @@ p_income <- ggplot(final_data, aes(x = income, y = flu_vac)) +
   )
 h_income + p_income
 ```
+The data for income had a right skew which was expected as that is usually the case with income. To fit the scatter plot we used a curved line as it fit the distribution better. However due to the right skew when we model we may have to use a log transformation and that may change the way the scatter plot looks so we need to reevaluate. 
 
 ## Education
 High School Completion: Percentage of adults ages 25 and over with a high school diploma or equivalent.
@@ -216,6 +217,7 @@ final_data |>
 
 cor(final_data$hs_comp, final_data$some_college)
 ```
+The data for high school graduation had a left skew while for some completion of college had a relatively normal distribution. There are concerns of co linearity so when modeling we will most likely just use some college. 
 
 ## Uninsured Percentage
 Uninsured Children: Percentage of children under age 19 without health insurance.
@@ -246,6 +248,7 @@ final_data |>
   geom_smooth(method = lm) +
   facet_wrap(~uninsured)
 ```
+Both uninsured children and adults had a right skew which may need to be log transformed when modeling. The scatter plot for uninsured children had a few significant outliars that must be addressed if we choose to use it when modeling. Due to concerns of colinearity we will likely decide to just use unisured adults.
 
 ## % Non-Proficient In English
 Percentage of population aged 5 and over who reported speaking English less than well.
@@ -268,6 +271,7 @@ p_eng <- ggplot(final_data, aes(x = Non_Proficient_English, y = flu_vac)) +
     y = "Flu Vaccination rate") 
 h_eng + p_eng
 ```
+The data for non-proficient English speakers was right skewed, however the scatter plot showed little relationship with the predictor and outcome variable. We will likely try to fix the skew and see if any relationship is present however it may be unlikely 
 
 # Final data
 ```{r}
