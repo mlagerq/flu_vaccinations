@@ -273,7 +273,6 @@ h_eng + p_eng
 ```{r}
 anyNA(final_data)
 nrow(final_data)
-head(final_data)
 final_data <- final_data |> select(-release_year.22, release_year.23)
 ```
 
