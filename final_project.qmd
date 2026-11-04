@@ -288,6 +288,8 @@ For education and uninsured rates we need to be careful of colinearity as we hav
 
 Income, uninsured rates and education exploratory plots showed possible relationship with flu vaccination rates. Non-Proficiency in English rate we did not see an obvious relationship.
 
+We will likely need to try a log transformation of pcp_ratio in the final model due to heavy skew.
+
 # Documentation
 ```{r eval = FALSE}
 library(countyhealthR)

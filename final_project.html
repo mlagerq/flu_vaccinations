@@ -400,6 +400,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Flu vaccination rate and uninsured rate will come from 2023; all other variables will come from 2022.</p>
 <p>For education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category.</p>
 <p>Income, uninsured rates and education exploratory plots showed possible relationship with flu vaccination rates. Non-Proficiency in English rate we did not see an obvious relationship.</p>
+<p>We will likely need to try a log transformation of pcp_ratio in the final model due to heavy skew.</p>
 </section>
 <section id="documentation" class="level1">
 <h1>Documentation</h1>
