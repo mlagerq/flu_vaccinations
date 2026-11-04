@@ -217,7 +217,7 @@ final_data |>
 
 cor(final_data$hs_comp, final_data$some_college)
 ```
-The data for high school graduation had a left skew while for some completion of college had a relatively normal distribution. There are concerns of co linearity so when modeling we will most likely just use some college. 
+The data for high school graduation had a left skew while for some completion of college had a relatively normal distribution. There are concerns of colinearity so when modeling we plan to only use some_college. 
 
 ## Uninsured Percentage
 Uninsured Children: Percentage of children under age 19 without health insurance.
@@ -234,7 +234,7 @@ final_data <- final_data |>
   select(-uninsured_adults.22, uninsured_adults = uninsured_adults.23) |>
   select(-uninsured_children.22, uninsured_children = uninsured_children.23)
 ```
-Since we have complete data from 2023 (that was not already removed), we will use the more recent uninsured rates.
+Since we have complete data from 2023, we will use the more recent uninsured rates.
 
 ```{r echo=FALSE}
 hist(final_data$uninsured_adults) 
@@ -248,7 +248,7 @@ final_data |>
   geom_smooth(method = lm) +
   facet_wrap(~uninsured)
 ```
-Both uninsured children and adults had a right skew which may need to be log transformed when modeling. The scatter plot for uninsured children had a few significant outliars that must be addressed if we choose to use it when modeling. Due to concerns of colinearity we will likely decide to just use unisured adults.
+Both uninsured children and adults had a right skew which may need to be log transformed when modeling. The scatter plot for uninsured children had a few significant outliers that must be addressed if we choose to use it when modeling. Due to concerns of colinearity we plan to only use uninsured adults.
 
 ## % Non-Proficient In English
 Percentage of population aged 5 and over who reported speaking English less than well.
@@ -283,13 +283,13 @@ final_data <- final_data |> select(-release_year.22, release_year.23)
 # Modeling Plan: 
 The missingness levels in our planned variables is tolerable so we will keep the predictors explored above. We have n=2892 observations after removing NAs.
 
-Flu vaccination rate and uninsured rate will come from 2023; all other variables will come from 2022. 
+Flu vaccination rate and uninsured rate will come from 2023; all other variables will come from 2022. We expect that most of our predictors are relatively stable year-to-year so this should not be very impactful.
 
-For education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category.
+For education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category: some_college and uninsured adults.
 
 Income, uninsured rates and education exploratory plots showed possible relationship with flu vaccination rates. Non-Proficiency in English rate we did not see an obvious relationship.
 
-We will likely need to try a log transformation of pcp_ratio in the final model due to heavy skew.
+We will likely need to transform the PCP ratio, % non-proficient English, median household income, and uninsured adults in the final model due to heavy skew.
 
 # Documentation
 ```{r eval = FALSE}

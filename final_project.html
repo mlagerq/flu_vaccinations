@@ -252,6 +252,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<p>The data for income had a right skew which was expected as that is usually the case with income. To fit the scatter plot we used a curved line as it fit the distribution better. However due to the right skew when we model we may have to use a log transformation and that may change the way the scatter plot looks so we need to reevaluate.</p>
 </section>
 <section id="education" class="level2">
 <h2 class="anchored" data-anchor-id="education">Education</h2>
@@ -303,6 +304,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>[1] 0.7235538</code></pre>
 </div>
 </div>
+<p>The data for high school graduation had a left skew while for some completion of college had a relatively normal distribution. There are concerns of colinearity so when modeling we plan to only use some_college.</p>
 </section>
 <section id="uninsured-percentage" class="level2">
 <h2 class="anchored" data-anchor-id="uninsured-percentage">Uninsured Percentage</h2>
@@ -334,7 +336,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>uninsured_adults<span class="fl">.22</span>, <span class="at">uninsured_adults =</span> uninsured_adults<span class="fl">.23</span>) <span class="sc">|&gt;</span></span>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>uninsured_children<span class="fl">.22</span>, <span class="at">uninsured_children =</span> uninsured_children<span class="fl">.23</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Since we have complete data from 2023 (that was not already removed), we will use the more recent uninsured rates.</p>
+<p>Since we have complete data from 2023, we will use the more recent uninsured rates.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -358,6 +360,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<p>Both uninsured children and adults had a right skew which may need to be log transformed when modeling. The scatter plot for uninsured children had a few significant outliers that must be addressed if we choose to use it when modeling. Due to concerns of colinearity we plan to only use uninsured adults.</p>
 </section>
 <section id="non-proficient-in-english" class="level2">
 <h2 class="anchored" data-anchor-id="non-proficient-in-english">% Non-Proficient In English</h2>
@@ -379,6 +382,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<p>The data for non-proficient English speakers was right skewed, however the scatter plot showed little relationship with the predictor and outcome variable. We will likely try to fix the skew and see if any relationship is present however it may be unlikely</p>
 </section>
 </section>
 <section id="final-data" class="level1">
@@ -398,10 +402,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="modeling-plan" class="level1">
 <h1>Modeling Plan:</h1>
 <p>The missingness levels in our planned variables is tolerable so we will keep the predictors explored above. We have n=2892 observations after removing NAs.</p>
-<p>Flu vaccination rate and uninsured rate will come from 2023; all other variables will come from 2022.</p>
-<p>For education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category.</p>
+<p>Flu vaccination rate and uninsured rate will come from 2023; all other variables will come from 2022. We expect that most of our predictors are relatively stable year-to-year so this should not be very impactful.</p>
+<p>For education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category: some_college and uninsured adults.</p>
 <p>Income, uninsured rates and education exploratory plots showed possible relationship with flu vaccination rates. Non-Proficiency in English rate we did not see an obvious relationship.</p>
-<p>We will likely need to try a log transformation of pcp_ratio in the final model due to heavy skew.</p>
+<p>We will likely need to transform the PCP ratio, % non-proficient English, median household income, and uninsured adults in the final model due to heavy skew.</p>
 </section>
 <section id="documentation" class="level1">
 <h1>Documentation</h1>
