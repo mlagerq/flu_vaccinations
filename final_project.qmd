@@ -1,6 +1,6 @@
 ---
 title: "Final Project: County-Level Influenza Vaccination Rates"
-subtitle: "EDA Memo"
+subtitle: "Analysis"
 author: "Megan Lagerquist & Joe DeMattia"
 execute:
   warning: false
@@ -15,47 +15,10 @@ library(ggplot2)
 library(patchwork)
 
 # load most recent County Health Rankings data
-chr2022_raw <- read.csv("analytic_data2025.csv") # data from 2022
-sup2023_raw <- read.csv("analytic_supplement_20260325.csv") # data from 2023
-
-chr2022 <- chr2022_raw |>
-  select(
-    fips = County.FIPS.Code,
-    name = Name, 
-    state = State.Abbreviation,
-    state_fips = State.FIPS.Code,
-    release_year = Release.Year,
-    flu_vac = Flu.Vaccinations.raw.value,
-    pcp_ratio = Ratio.of.population.to.primary.care.physicians.,
-    #pcp_raw = Primary.Care.Physicians.raw.value,
-    rural = X..Rural.raw.value,
-    income = Median.Household.Income.raw.value,
-    uninsured_adults = Uninsured.Adults.raw.value,
-    uninsured_children = Uninsured.Children.raw.value,
-    hs_comp = High.School.Completion.raw.value,
-    some_college = Some.College.raw.value,
-    Non_Proficient_English = X..Not.Proficient.in.English.raw.value
-  ) |>
-  filter(fips != 0) |>
-  mutate(fips = as.numeric(fips)) |>
-  as_tibble()
-
-# gather more recent variables when they exist (mapping done per codebook)
-sup2023 <- sup2023_raw |>
-  select(
-    fips = countycode,
-    name = county, 
-    state,
-    state_fips = statecode,
-    flu_vac = v155_rawvalue,
-    pcp_ratio = v004_rawalternatevalue,
-    #pcp_raw = v004_rawvalue,
-    uninsured_adults = v003_rawvalue,
-    uninsured_children = v122_rawvalue
-  ) |>
-  mutate(release_year = "2026") |>
-  filter(fips != 0) |>
-  as_tibble()
+final_data <- read.csv("flu_vac_data.csv") # dataset created in eda_memo
+df <- final_data |> 
+  select(fips, state_fips, name, state, flu_vac, rural, pcp_ratio, income, 
+         some_college, uninsured_adults, non_eng = Non_Proficient_English)
 ```
 
 Research question: How do county-level characteristics explain variation in annual county-level influenza vaccination rate among Medicare fee-for-service enrollees?
@@ -63,237 +26,75 @@ Research question: How do county-level characteristics explain variation in annu
 Primary Data: County Health Rankings full data - published 2025 (2022 data)
 Secondary Data: County Health Rankings supplemental data - published 2026 (2023 data)
 
-We have observations for n=3152 counties in both data sets.
+## Correlation Matrix
+Check for colinearity problems. Nothing too bad, r=0.63 between income and some_college is the highest.
 
-# Outcome variable: influenza vaccination rate
+```{r echo=F}
+#| fig-width: 6
+#| fig-height: 4
 
-Ideally, we want to use the flu vaccination rate at the county level from the supplemental data file that contains the 2023 data, released in 2026, as it is the most recent available. First we will compare the vaccination rates from 2022 and 2023.
+library(corrplot)
 
-```{r}
-#| eval: true
-summary(chr2022$flu_vac) # 27 NAs
-summary(sup2023$flu_vac) # 30 NAs
-round(sum(is.na(sup2023$flu_vac))/nrow(sup2023), 4) # ~1% percent missing
+cor_mat <- df |>
+  select(rural, pcp_ratio, income, some_college, uninsured_adults, non_eng) |>
+  cor(use = "complete.obs")
+
+corrplot(cor_mat,
+         method = "color",
+         type = "upper",
+         addCoef.col = "black",
+         number.cex = 0.8,
+         tl.col = "black",
+         tl.srt = 45,
+         diag = FALSE)
 ```
-
-```{r echo = FALSE}
-ggplot(data = chr2022, aes(x = flu_vac)) +
-  geom_histogram(binwidth = .05) + 
-  labs(title = "2022 Flu Vaccination Rate")
-ggplot(data = sup2023, aes(x = flu_vac)) +
-  geom_histogram(binwidth = .05)+ 
-  labs(title = "2023 Flu Vaccination Rate")
-```
-
-The average vaccination rate is higher in 2022 (mean = 0.41) than 2023 (mean = 0.38). The distribution for 2023 is fairly symmetric where as the distribution for 2022 is more left-skewed. 
-
-Just under 1% of the data is missing for flu_vac overall in the 2023 data and only a few more counties for 2023 compared, so it is acceptable to use the outcome from the 2023 supplemental data.
-
-```{r}
-# Join to create one data set, excluding counties with no data for 2023 flu vaccination rate.
-full_data <- 
-  left_join(sup2023, chr2022, 
-            by=c("fips", "state_fips", "name", "state"), 
-            suffix = c(".23",".22")) |> 
-  filter(!is.na(flu_vac.23)) |> # Exclude counties with no flu_vac data for 2023
-  select(-flu_vac.22, flu_vac = flu_vac.23)
-
-chr2022 <- chr2022 |> filter(!is.na(flu_vac))
-sup2023 <- sup2023 |> filter(!is.na(flu_vac))
-
-final_data <- full_data
-```
-
-# Predictor variables
-
-## % Rural
-Percentage of population living in a census-defined rural area. 
-
-Only available in the 2025 release.
-```{r echo = FALSE}
-# Missingness
-summary(chr2022$rural) # 8 NAs, acceptable
-final_data <- final_data |> filter(!is.na(rural))
-
-# Distribution
-h_rural <- ggplot(final_data, aes(x = rural)) +
-  geom_histogram()+ 
-  labs(title = "% Rural")
-p_rural <-ggplot(final_data, aes(x = jitter(rural, amount = .02), y = flu_vac)) +
-  geom_point(alpha = .5) + 
-  geom_smooth(method=lm) +
-  labs (
-    title = "Flu Vac. Rate vs % Rural",
-    x = "% Rural",
-    y = "Flu Vaccination rate"
-  )
-h_rural + p_rural
-```
-The data is somewhat uniform under 100% rural but many counties are 100% rural. However, the linear relationship appears appropriate. There are only 8 counties with NA values, which we will drop.
-
-## PCP Ratio 
-Ratio of population to primary care physicians.
-```{r eval=FALSE}
-# Missingness
-summary(chr2022$pcp_ratio) # 154 NAs
-summary(sup2023$pcp_ratio) # 243 NAs
-nrow(full_data |> filter(is.na(coalesce(pcp_ratio.23, pcp_ratio.22)))) # 147 NAs
-```
-The data on PCPs for 2022 is more complete than 2023 and there are only 7 extra counties we drop by using 2022 only; this is acceptable.
-
-However, since the denominator is number of PCPs in the county, for counties where there are no PCPs, negative county population is reported instead.
-```{r}
-hist(final_data$pcp_ratio.22) # right skewed
-nrow(final_data |> filter(pcp_ratio.22 < 0)) # 68 rows < 0
-```
-
-We will remove observations where the pcp_ratio is negative.
-```{r}
-final_data <- final_data |> filter((!is.na(pcp_ratio.22)) & pcp_ratio.22 >= 0) |>
-  select(-pcp_ratio.23, pcp_ratio = pcp_ratio.22)
-```
-
-Evaluating the remaining distribution, we see that the data is very right-skewed (median = 2100 patients per PCP, mean = 2813 patients per PCP) and the linear model does not seem to fit the graph well. We will likely need to try a log transformation of pcp_ratio in the final model.
+## Q-Q Plots
+Full model will be: lm(flu_vac ~ rural + pcp_ratio + income + some_college + uninsured_adults + non_eng, df).
+First, let's check the residuals by making a simple model for each individual predictor.
 ```{r echo=FALSE}
-summary(final_data$pcp_ratio)
+#| fig-width: 8
+#| fig-height: 8
 
-h_pcp <-ggplot(final_data, aes(x = pcp_ratio)) +
-  geom_histogram()+ 
-  labs(title = "Ratio of population to PCPs")
+vars <- c("rural", "pcp_ratio", "income", "some_college", "uninsured_adults", "non_eng")
 
-p_pcp <- ggplot(final_data, aes(pcp_ratio, flu_vac)) +
-  geom_point(alpha = .5) + 
-  labs (
-    title = "Flu Vac. Rate vs PCP Ratio",
-    x = "Population/Primary Care Physicians",
-    y = "Flu Vaccination rate") +
-  geom_smooth(method=lm)
+op <- par(mfcol = c(4, 3), mar = c(4, 4, 3, 1), cex.main = 0.9)
 
-h_pcp + p_pcp
+for (i in seq_along(vars)) {
+  formula_str <- as.formula(paste("flu_vac ~", vars[i]))
+  m <- lm(formula_str, data = df)
+
+  plot(fitted(m), resid(m),
+       xlab = "Fitted values", ylab = "Residuals",
+       main = paste("flu_vac ~", vars[i], "(CHR)"))
+  abline(h = 0, lty = 2)
+
+  qqnorm(resid(m), main = paste("Q-Q:", vars[i]))
+  qqline(resid(m))
+}
+
+par(op)
 ```
-
-## Median Household Income
-The income where half of households in a county earn more and half of households earn less.
-```{r}
-summary(final_data$income)
-```
-
+Transforming the ones that look the most problematic:
 ```{r echo=FALSE}
-final_data <- final_data |> filter(!is.na(income))
-h_income <- ggplot(final_data, aes(x = income)) +
-  geom_histogram()+ 
-  labs(title = "Median Household Income")
-p_income <- ggplot(final_data, aes(x = income, y = flu_vac)) + 
-  geom_point(alpha = .5) + 
-  geom_smooth(method = loess) +
-  labs (
-    title = "Flu Vac. Rate vs Median Income",
-    x = "Median Household Income",
-    y = "Flu Vaccination rate"
-  )
-h_income + p_income
-```
-The data for income had a right skew which was expected as that is usually the case with income. To fit the scatter plot we used a curved line as it fit the distribution better. However due to the right skew when we model we may have to use a log transformation and that may change the way the scatter plot looks so we need to reevaluate. 
+#| fig-width: 8
+#| fig-height: 8
 
-## Education
-High School Completion: Percentage of adults ages 25 and over with a high school diploma or equivalent.
-Some College: Percentage of adults ages 25-44 with some post-secondary education.
+vars <- c("rural", "log(pcp_ratio)", "log(income)", "some_college", "log(uninsured_adults)", "log(non_eng+0.001)")
 
-Only available in the 2025 release (for 2022).
-```{r}
-#Missingness
-summary(final_data$hs_comp)
-summary(final_data$some_college)
+op <- par(mfcol = c(4, 3), mar = c(4, 4, 3, 1), cex.main = 0.9)
 
-hist(final_data$hs_comp) # Left Skew
-hist(final_data$some_college)
+for (i in seq_along(vars)) {
+  formula_str <- as.formula(paste("flu_vac ~", vars[i]))
+  m <- lm(formula_str, data = df)
 
-final_data |> 
-  pivot_longer(c(hs_comp,some_college) ,names_to = "education", values_to = "rate") |> 
-  ggplot(aes(x = rate, y = flu_vac)) +
-  geom_point() + 
-  geom_smooth(method = lm) +
-  facet_wrap(~education)
+  plot(fitted(m), resid(m),
+       xlab = "Fitted values", ylab = "Residuals",
+       main = paste("flu_vac ~", vars[i], "(CHR)"))
+  abline(h = 0, lty = 2)
 
-cor(final_data$hs_comp, final_data$some_college)
-```
-The data for high school graduation had a left skew while for some completion of college had a relatively normal distribution. There are concerns of colinearity so when modeling we plan to only use some_college. 
+  qqnorm(resid(m), main = paste("Q-Q:", vars[i]))
+  qqline(resid(m))
+}
 
-## Uninsured Percentage
-Uninsured Children: Percentage of children under age 19 without health insurance.
-Uninsured Adults: Percentage of adults under age 65 without health insurance.
-```{r}
-# Missingness
-summary(final_data$uninsured_children.23)
-summary(final_data$uninsured_adults.23)
-summary(final_data$uninsured_children.22) 
-summary(final_data$uninsured_adults.22) 
-
-# Since equal amount of missing values, we will use most recent from 2023
-final_data <- final_data |>
-  select(-uninsured_adults.22, uninsured_adults = uninsured_adults.23) |>
-  select(-uninsured_children.22, uninsured_children = uninsured_children.23)
-```
-Since we have complete data from 2023, we will use the more recent uninsured rates.
-
-```{r echo=FALSE}
-hist(final_data$uninsured_adults) 
-hist(final_data$uninsured_children, xlim = c(0, .3)) 
-# Both Right skewed
-
-final_data |> 
-  pivot_longer(c(uninsured_children, uninsured_adults) ,names_to = "uninsured", values_to = "rate") |> 
-  ggplot(aes(x = rate, y = flu_vac)) +
-  geom_point(alpha=0.5) + 
-  geom_smooth(method = lm) +
-  facet_wrap(~uninsured)
-```
-Both uninsured children and adults had a right skew which may need to be log transformed when modeling. The scatter plot for uninsured children had a few significant outliers that must be addressed if we choose to use it when modeling. Due to concerns of colinearity we plan to only use uninsured adults.
-
-## % Non-Proficient In English
-Percentage of population aged 5 and over who reported speaking English less than well.
-
-Only available in the 2025 release (for 2022).
-```{r}
-summary(final_data$Non_Proficient_English)
-```
-
-```{r echo=FALSE}
-h_eng <- ggplot(final_data, aes(x = Non_Proficient_English)) +
-  geom_histogram()+ 
-  labs(title = "% Not Proficient in English")
-p_eng <- ggplot(final_data, aes(x = Non_Proficient_English, y = flu_vac)) + 
-  geom_point(alpha = .5) + 
-  geom_smooth(method = lm) +
-  labs (
-    title = "Flu Vac. Rate vs % Not Proficient",
-    x = "% Not Proficient in English",
-    y = "Flu Vaccination rate") 
-h_eng + p_eng
-```
-The data for non-proficient English speakers was right skewed, however the scatter plot showed little relationship with the predictor and outcome variable. We will likely try to fix the skew and see if any relationship is present however it may be unlikely 
-
-# Final data
-```{r}
-anyNA(final_data)
-nrow(final_data)
-final_data <- final_data |> select(-release_year.22, release_year.23)
-```
-
-# Modeling Plan: 
-The missingness levels in our planned variables is tolerable so we will keep the predictors explored above. We have n=2892 observations after removing NAs.
-
-Flu vaccination rate and uninsured rate will come from 2023; all other variables will come from 2022. We expect that most of our predictors are relatively stable year-to-year so this should not be very impactful.
-
-For education and uninsured rates we need to be careful of colinearity as we have two correlated measures for each (hs_grad and some_college for education, adults and children for uninsured rates). We plan to keep just one variable from each category: some_college and uninsured adults.
-
-Income, uninsured rates and education exploratory plots showed possible relationship with flu vaccination rates. Non-Proficiency in English rate we did not see an obvious relationship.
-
-We will likely need to transform the PCP ratio, % non-proficient English, median household income, and uninsured adults in the final model due to heavy skew.
-
-# Documentation
-```{r eval = FALSE}
-library(countyhealthR)
-list_chrr_measures(release_year = '2025')
-get_chrr_measure_metadata("% Not Proficient in English", '2025')
+par(op)
 ```
